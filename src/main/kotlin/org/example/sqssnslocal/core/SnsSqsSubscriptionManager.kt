@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
 import software.amazon.awssdk.services.sns.SnsClient
+import software.amazon.awssdk.services.sns.model.ListTopicsRequest
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sns.model.SubscribeRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
@@ -19,7 +20,7 @@ class SnsSqsSubscriptionManager(
     private val environment: Environment,
     private val snsSqsConfig: SnsSqsConfig,
 ) {
-//    @PostConstruct
+    //    @PostConstruct
 //    fun subscribeQueueToTopic() {
 //        val topicArn = "arn:aws:sns:us-east-1:000000000000:MyTopic" // Replace with your SNS topic ARN
 //        val queueName = "MyQueue" //
@@ -41,12 +42,18 @@ class SnsSqsSubscriptionManager(
 //
 //        snsClient.subscribe(subscribeRequest)
 //    }
+    private fun getTopicArn(topicName: String): String {
+        val topics = snsClient.listTopics(ListTopicsRequest.builder().build()).topics()
+        return topics.firstOrNull { it.topicArn().endsWith(":$topicName") }
+            ?.topicArn() ?: throw IllegalArgumentException("Topic $topicName not found")
+    }
 
     @PostConstruct
     fun subscribeQueuesToTopics() {
         topicMapObj.topicConfigs.forEach { (topic, configs) ->
 
-            val topicArn = "arn:aws:sns:us-east-1:000000000000:${topic.topicName}" // Replace with dynamic ARN if needed
+//            val topicArn = "arn:aws:sns:us-east-1:000000000000:${topic.topicName}" // Replace with dynamic ARN if needed
+            val topicArn = getTopicArn(topic.topicName)
             configs.forEach { config ->
                 val queueUrl = resolveQueueUrl(config.queueName)
                 val queueDetails = sqsClient.getQueueAttributes {
