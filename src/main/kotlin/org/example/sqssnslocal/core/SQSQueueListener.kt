@@ -21,4 +21,8 @@ class SqsQueueListener {
     fun listenToQueue3(message: String) {
         println("Received message: $message in Queue 3")
     }
+    @SqsListener(QueueNames.MyQueue4)
+    fun listenToQueue4(message: String) {
+        println("Received message: $message in Queue 4")
+    }
 }

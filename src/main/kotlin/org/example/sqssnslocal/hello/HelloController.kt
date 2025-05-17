@@ -13,7 +13,7 @@ class HelloController(private val helloService: HelloService) {
     @GetMapping("/hello")
     fun sendHelloMessage(
     ): String {
-        helloService.hello1()
+        helloService.sendMessageToTopic1()
         return "Hello message sent!"
     }
 }

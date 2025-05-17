@@ -5,9 +5,11 @@ import jakarta.annotation.PostConstruct
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
 import software.amazon.awssdk.services.sns.SnsClient
+import software.amazon.awssdk.services.sns.model.CreateTopicRequest
 import software.amazon.awssdk.services.sns.model.ListTopicsRequest
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sns.model.SubscribeRequest
+import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName
 import topicMapObj
@@ -20,28 +22,7 @@ class SnsSqsSubscriptionManager(
     private val environment: Environment,
     private val snsSqsConfig: SnsSqsConfig,
 ) {
-    //    @PostConstruct
-//    fun subscribeQueueToTopic() {
-//        val topicArn = "arn:aws:sns:us-east-1:000000000000:MyTopic" // Replace with your SNS topic ARN
-//        val queueName = "MyQueue" //
-//        // Resolve the queue URL
-//        val queueUrl = resolveQueueUrl(queueName)
-//
-//        // Get the queue ARN
-//        val queueDetails = sqsClient.getQueueAttributes {
-//            it.queueUrl(queueUrl)
-//            it.attributeNames(QueueAttributeName.QUEUE_ARN)
-//        }
-//
-//        // Subscribe the queue to the SNS topic
-//        val subscribeRequest = SubscribeRequest.builder()
-//            .topicArn(topicArn)
-//            .protocol("sqs")
-//            .endpoint(queueDetails.attributes().getValue(QueueAttributeName.QUEUE_ARN))
-//            .build()
-//
-//        snsClient.subscribe(subscribeRequest)
-//    }
+
     private fun getTopicArn(topicName: String): String {
         val topics = snsClient.listTopics(ListTopicsRequest.builder().build()).topics()
         return topics.firstOrNull { it.topicArn().endsWith(":$topicName") }
@@ -51,11 +32,9 @@ class SnsSqsSubscriptionManager(
     @PostConstruct
     fun subscribeQueuesToTopics() {
         topicMapObj.topicConfigs.forEach { (topic, configs) ->
-
-//            val topicArn = "arn:aws:sns:us-east-1:000000000000:${topic.topicName}" // Replace with dynamic ARN if needed
-            val topicArn = getTopicArn(topic.topicName)
+            val topicArn = getTopic(topic.topicName)
             configs.forEach { config ->
-                val queueUrl = resolveQueueUrl(config.queueName)
+                val queueUrl = getQueueURL(config.queueName)
                 val queueDetails = sqsClient.getQueueAttributes {
                     it.queueUrl(queueUrl)
                     it.attributeNames(QueueAttributeName.QUEUE_ARN)
@@ -79,6 +58,26 @@ class SnsSqsSubscriptionManager(
             .queueName(queueName)
             .build()
         return sqsClient.getQueueUrl(request).queueUrl()
+    }
+
+    private fun getQueueURL(queueName: String): String {
+        return try {
+            resolveQueueUrl(queueName)
+        } catch (e: Exception) {
+            sqsClient.createQueue(
+                CreateQueueRequest.builder().queueName(queueName).build()
+            ).queueUrl()
+        }
+    }
+
+    private fun getTopic(topicName: String): String {
+        return try {
+            return getTopicArn(topicName)
+        } catch (e: Exception) {
+            snsClient.createTopic(
+                CreateTopicRequest.builder().name(topicName).build()
+            ).topicArn()
+        }
     }
 
     @PostConstruct
