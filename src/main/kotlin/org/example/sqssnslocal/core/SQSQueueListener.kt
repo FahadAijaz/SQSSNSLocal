@@ -9,7 +9,7 @@ class SqsQueueListener {
 
     @SqsListener(QueueNames.MyQueue1)
     fun listenToQueue1(message: String) {
-        println("Received message: $message in Queue 1")
+        println("Received message: $message in Queue 1 ")
     }
 
     @SqsListener(QueueNames.MyQueue2)
