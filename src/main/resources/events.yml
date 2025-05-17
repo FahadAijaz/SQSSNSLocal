@@ -1,0 +1,8 @@
+topics:
+  - name: MyTopic1
+    queues:
+      - MyQueue1
+      - MyQueue2
+  - name: MyTopic2
+    queues:
+      - MyQueue3
