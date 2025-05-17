@@ -142,3 +142,20 @@ The application automatically creates topics and queues if they do not already e
 2. Add a new queue `MyNewQueue` in `QueueNames.kt`.
 3. Start the application and invoke the `/hello` endpoint.
 4. Verify that the new queue receives messages if subscribed to the new topic.
+
+---
+
+## Areas of Improvement
+
+There are areas of improvement in this Proof of Concept (POC):
+
+1. **FIFO Queue Creation**: Enhance support for creating and managing FIFO queues with proper configurations.
+2. **Deserialization and Typing of Message Events**: Implement robust deserialization and typing mechanisms for message events to ensure type safety and reduce errors.
+3. **Additional Queue Configurations**: Extend support for configuring the following attributes during queue creation:
+   - **Dead Letter Queue (DLQ) Creation**: Automatically create and associate DLQs for better error handling.
+   - **MAX_RETRY_COUNT**: Configure the maximum number of retries before moving messages to the DLQ.
+   - **VISIBILITY_TIMEOUT**: Set the duration for which a message remains invisible after being received.
+   - **MESSAGE_RETENTION_PERIOD**: Define how long messages are retained in the queue.
+   - **DELAY_SECONDS**: Configure delays for message visibility.
+   - **MAXIMUM_MESSAGE_SIZE**: Set the maximum size of messages allowed in the queue.
+   - **HIGH_THROUGHPUT**: Enable high throughput for FIFO queues by configuring deduplication and throughput limits.
